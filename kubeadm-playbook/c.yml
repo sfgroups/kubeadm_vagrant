@@ -1,0 +1,26 @@
+---
+- hosts: all
+  remote_user: root
+  gather_facts: False
+
+  tasks:
+    - name: Ansible copy file to remote server
+    copy:
+      src: /root/bin/fix_deault_route.sh
+      dest: /root/fix_deault_route.sh
+
+   - name: test connection
+      ping:
+
+   - name: install reqired software
+      yum: pkg={{item}} state=installed
+      with_items:
+      - yum-utils
+      - ntp
+      - net-tools
+      - wget
+      - util-linux
+      - bind-utils
+      - psmisc
+      - jq
+

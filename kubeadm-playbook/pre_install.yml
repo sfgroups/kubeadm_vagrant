@@ -1,0 +1,85 @@
+- hosts: all
+  remote_user: root
+  gather_facts: False
+
+  roles:
+    - epel-repository
+
+  tasks:
+  - name: test connection
+    ping:
+
+  - name: load kernel br_netfilter module
+    modprobe:
+      name: br_netfilter
+      state: present
+
+  - name: update /proc/sys/net/bridge/bridge-nf-call-iptables file
+    lineinfile:
+      path: /proc/sys/net/bridge/bridge-nf-call-iptables
+      line: '1'
+
+  - name: update /proc/sys/net/bridge/bridge-nf-call-ip6tables file
+    lineinfile:
+      path: /proc/sys/net/bridge/bridge-nf-call-ip6tables
+      line: '1'
+
+  - name: update kernel settings for net.bridge.bridge-nf-call-iptables
+    sysctl:
+      name: net.bridge.bridge-nf-call-iptables
+      value: 1
+      sysctl_set: yes
+      state: present
+      reload: yes
+
+  - name: update kernel settings for bridge-nf-call-ip6tables
+    sysctl:
+      name: net.bridge.bridge-nf-call-ip6tables
+      value: 1
+      sysctl_set: yes
+      state: present
+      reload: yes
+
+  - name: Ansible copy fix_default_route.sh file to remote server
+    copy:
+      src: /root/bin/fix_deault_route.sh
+      dest: /root/fix_deault_route.sh
+      owner: root
+      group: root
+      mode: 0744
+      backup: no
+
+  - name: Ansible copy hosts file to remote server
+    copy:
+      src: /root/kubeadm-playbook/files/etc_hosts_file
+      dest: /etc/hosts
+      owner: root
+      group: root
+      mode: 0744
+      backup: no
+
+  - name: Ansible copy k8s.conf file to remote server
+    copy:
+      src: /root/kubeadm-playbook/files/k8s.conf
+      dest: /etc/sysctl.d/k8s.conf
+      owner: root
+      group: root
+      mode: 0744
+      backup: no
+
+  - name: install reqired software
+    yum: pkg={{item}} state=installed
+    with_items:
+      - yum-utils
+      - ntp
+      - net-tools
+      - wget
+      - util-linux
+      - bind-utils
+      - psmisc
+      - jq
+
+  - name: Fix the default route
+    shell: /root/fix_deault_route.sh
+    args:
+      chdir: /root/

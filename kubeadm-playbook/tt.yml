@@ -1,0 +1,45 @@
+---
+- hosts: all
+  remote_user: root
+  gather_facts: False
+
+  tasks:
+     - name: update /etc/hosts file
+       lineinfile:
+         path: /etc/hosts
+         regexp: '^127\.0\.0\.1'
+         line: '127.0.0.1 localhost'
+         owner: root
+         group: root
+         mode: 0644
+
+     - name: update /etc/sysconfig/docker-network file
+       lineinfile:
+         path: /etc/sysconfig/docker-network
+         regexp: '^source /run/flannel/subnet.env'
+         line: 'source /run/flannel/subnet.env'
+         insertafter: '^#'
+
+     - name: load kernel br_netfilter module
+       modprobe:
+         name: br_netfilter
+         state: present
+
+     - name: update /proc/sys/net/bridge/bridge-nf-call-iptables file
+       lineinfile:
+         path: /proc/sys/net/bridge/bridge-nf-call-iptables
+         line: '1'
+
+     - name: update /proc/sys/net/bridge/bridge-nf-call-ip6tables file
+       lineinfile:
+         path: /proc/sys/net/bridge/bridge-nf-call-ip6tables
+         line: '1'
+  
+     - name: update kernel settings
+       become: yes
+       sysctl:
+         name: net.bridge.bridge-nf-call-iptables
+         value: 1
+         sysctl_set: yes
+         state: present
+         reload: yes

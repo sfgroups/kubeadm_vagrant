@@ -1,0 +1,6 @@
+---
+- hosts: all
+  gather_facts: yes #IMPORTANT
+  remote_user: root
+  roles:
+    - epel-repository

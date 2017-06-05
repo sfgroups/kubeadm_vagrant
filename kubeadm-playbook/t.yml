@@ -1,0 +1,13 @@
+---
+- hosts: all
+  remote_user: root
+  gather_facts: False
+
+  tasks:
+     - name: update kernel settings
+       sysctl:
+         name: net.bridge.bridge-nf-call-iptables
+         value: 1
+         sysctl_set: yes
+         state: present
+         reload: yes
